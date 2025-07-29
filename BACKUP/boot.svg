@@ -1,0 +1,213 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg"
+     viewBox="0 0 768 768" width="768" height="768"
+     preserveAspectRatio="xMidYMid meet">
+
+  <!-- Black background -->
+  <rect width="100%" height="100%" fill="black"/>
+
+  <!-- Tick and connector path defs -->
+  <defs>
+    <line id="tick" x1="0" y1="-360" x2="0" y2="-345" stroke="white" stroke-width="2"/>
+    <path id="linkTop" d="M0,-260 L0,0"/>
+    <path id="linkRight" d="M225,130 L0,0"/>
+    <path id="linkLeft" d="M-225,130 L0,0"/>
+  </defs>
+
+  <g transform="translate(384,384)" id="hud">
+
+    <!-- PHASE 1 & 2: 60-TICK FULL RING -->
+    <g id="tickRing">
+      <g>
+        <animateTransform attributeName="transform" type="rotate"
+                          from="0" to="-360" dur="30s" repeatCount="indefinite"/>
+        <!-- Generate 60 ticks, 360 / 60 = 6° steps -->
+        <!-- For readability, split into rows -->
+        <use href="#tick" transform="rotate(0)"/>
+        <use href="#tick" transform="rotate(6)"/>
+        <use href="#tick" transform="rotate(12)"/>
+        <use href="#tick" transform="rotate(18)"/>
+        <use href="#tick" transform="rotate(24)"/>
+        <use href="#tick" transform="rotate(30)"/>
+        <use href="#tick" transform="rotate(36)"/>
+        <use href="#tick" transform="rotate(42)"/>
+        <use href="#tick" transform="rotate(48)"/>
+        <use href="#tick" transform="rotate(54)"/>
+        <use href="#tick" transform="rotate(60)"/>
+        <use href="#tick" transform="rotate(66)"/>
+        <use href="#tick" transform="rotate(72)"/>
+        <use href="#tick" transform="rotate(78)"/>
+        <use href="#tick" transform="rotate(84)"/>
+        <use href="#tick" transform="rotate(90)"/>
+        <use href="#tick" transform="rotate(96)"/>
+        <use href="#tick" transform="rotate(102)"/>
+        <use href="#tick" transform="rotate(108)"/>
+        <use href="#tick" transform="rotate(114)"/>
+        <use href="#tick" transform="rotate(120)"/>
+        <use href="#tick" transform="rotate(126)"/>
+        <use href="#tick" transform="rotate(132)"/>
+        <use href="#tick" transform="rotate(138)"/>
+        <use href="#tick" transform="rotate(144)"/>
+        <use href="#tick" transform="rotate(150)"/>
+        <use href="#tick" transform="rotate(156)"/>
+        <use href="#tick" transform="rotate(162)"/>
+        <use href="#tick" transform="rotate(168)"/>
+        <use href="#tick" transform="rotate(174)"/>
+        <use href="#tick" transform="rotate(180)"/>
+        <use href="#tick" transform="rotate(186)"/>
+        <use href="#tick" transform="rotate(192)"/>
+        <use href="#tick" transform="rotate(198)"/>
+        <use href="#tick" transform="rotate(204)"/>
+        <use href="#tick" transform="rotate(210)"/>
+        <use href="#tick" transform="rotate(216)"/>
+        <use href="#tick" transform="rotate(222)"/>
+        <use href="#tick" transform="rotate(228)"/>
+        <use href="#tick" transform="rotate(234)"/>
+        <use href="#tick" transform="rotate(240)"/>
+        <use href="#tick" transform="rotate(246)"/>
+        <use href="#tick" transform="rotate(252)"/>
+        <use href="#tick" transform="rotate(258)"/>
+        <use href="#tick" transform="rotate(264)"/>
+        <use href="#tick" transform="rotate(270)"/>
+        <use href="#tick" transform="rotate(276)"/>
+        <use href="#tick" transform="rotate(282)"/>
+        <use href="#tick" transform="rotate(288)"/>
+        <use href="#tick" transform="rotate(294)"/>
+        <use href="#tick" transform="rotate(300)"/>
+        <use href="#tick" transform="rotate(306)"/>
+        <use href="#tick" transform="rotate(312)"/>
+        <use href="#tick" transform="rotate(318)"/>
+        <use href="#tick" transform="rotate(324)"/>
+        <use href="#tick" transform="rotate(330)"/>
+        <use href="#tick" transform="rotate(336)"/>
+        <use href="#tick" transform="rotate(342)"/>
+        <use href="#tick" transform="rotate(348)"/>
+        <use href="#tick" transform="rotate(354)"/>
+      </g>
+      <animate attributeName="opacity" from="1" to="0"
+               begin="6s" dur="2s" fill="freeze"/>
+    </g>
+
+    <!-- TRIANGLES -->
+    <g id="innerGroup" transform="scale(1.2)">
+      <animateTransform attributeName="transform" type="rotate"
+                        from="0" to="360" dur="40s" repeatCount="indefinite"/>
+
+      <g stroke="white" fill="none">
+        <polygon points="0,-260 225,130 -225,130" stroke-width="4">
+          <animate attributeName="points"
+                   to="0,0 0,0 0,0"
+                   begin="6s" dur="2s" fill="freeze"/>
+        </polygon>
+        <polygon points="0,200 -173.2,-100 173.2,-100"
+                 stroke-width="3" opacity="0.6">
+          <animate attributeName="opacity" to="0"
+                   begin="6s" dur="1.8s" fill="freeze"/>
+        </polygon>
+        <polygon points="0,140 -121.2,-70 121.2,-70"
+                 stroke-width="2" opacity="0.3">
+          <animate attributeName="opacity" to="0"
+                   begin="6s" dur="1.8s" fill="freeze"/>
+        </polygon>
+      </g>
+
+      <!-- NODES -->
+      <g id="nodes" stroke="white" fill="black">
+        <g id="nodeTpl">
+          <circle r="60" stroke-width="8"/>
+          <g stroke="white" stroke-width="5" stroke-linecap="round" fill="white">
+            <circle cx="0" cy="0" r="9"/>
+            <circle cx="0" cy="-25" r="6"/>
+            <circle cx="20" cy="15" r="6"/>
+            <circle cx="-20" cy="15" r="6"/>
+            <line x1="0" y1="0" x2="0" y2="-25"/>
+            <line x1="0" y1="0" x2="20" y2="15"/>
+            <line x1="0" y1="0" x2="-20" y2="15"/>
+          </g>
+        </g>
+        <use href="#nodeTpl" transform="translate(0,-260)"/>
+        <use href="#nodeTpl" transform="translate(225,130)"/>
+        <use href="#nodeTpl" transform="translate(-225,130)"/>
+        <animate attributeName="opacity" from="1" to="0"
+                 begin="9s" dur="1s" fill="freeze"/>
+      </g>
+
+      <!-- CONNECTOR LINES -->
+      <g stroke="white" stroke-width="2" stroke-linecap="round">
+        <path d="M0,-260 L0,-260">
+          <animate attributeName="d" to="M0,-260 L0,0"
+                   begin="6s" dur="2s" fill="freeze"/>
+          <animate attributeName="opacity" from="1" to="0"
+                   begin="8s" dur="1s" fill="freeze"/>
+        </path>
+        <path d="M225,130 L225,130">
+          <animate attributeName="d" to="M225,130 L0,0"
+                   begin="6.2s" dur="1.8s" fill="freeze"/>
+          <animate attributeName="opacity" from="1" to="0"
+                   begin="8.2s" dur="1s" fill="freeze"/>
+        </path>
+        <path d="M-225,130 L-225,130">
+          <animate attributeName="d" to="M-225,130 L0,0"
+                   begin="6.4s" dur="1.6s" fill="freeze"/>
+          <animate attributeName="opacity" from="1" to="0"
+                   begin="8.4s" dur="1s" fill="freeze"/>
+        </path>
+      </g>
+    </g>
+
+    <!-- CORE RINGS -->
+    <g id="centerCore">
+      <circle r="80" fill="none" stroke="white" stroke-width="18"
+              stroke-dasharray="60 20 15 20 60 20 15 20">
+        <animateTransform attributeName="transform" type="rotate"
+                          from="0" to="360" dur="26s" repeatCount="indefinite"/>
+        <animateTransform attributeName="transform" type="scale"
+                          values="1;1.6;1" keyTimes="0;0.2;1"
+                          begin="8s" dur="3s" fill="freeze"/>
+      </circle>
+      <circle r="62" fill="none" stroke="white" stroke-width="10"
+              stroke-dasharray="45 14 14 14 45 14 14 14">
+        <animateTransform attributeName="transform" type="rotate"
+                          from="360" to="0" dur="22s" repeatCount="indefinite"/>
+        <animateTransform attributeName="transform" type="scale"
+                          values="1;1.5;1" keyTimes="0;0.25;1"
+                          begin="8.3s" dur="2.7s" fill="freeze"/>
+      </circle>
+      <circle r="44" fill="none" stroke="white" stroke-width="8"
+              stroke-dasharray="25 10 10 10 25 10 10 10">
+        <animateTransform attributeName="transform" type="rotate"
+                          from="0" to="360" dur="18s" repeatCount="indefinite"/>
+        <animateTransform attributeName="transform" type="scale"
+                          values="1;1.4;1" keyTimes="0;0.3;1"
+                          begin="8.6s" dur="2.4s" fill="freeze"/>
+      </circle>
+      <circle r="26" fill="none" stroke="white" stroke-width="6"
+              stroke-dasharray="10 5 5 5 10 5 5 5">
+        <animateTransform attributeName="transform" type="rotate"
+                          from="360" to="0" dur="14s" repeatCount="indefinite"/>
+        <animateTransform attributeName="transform" type="scale"
+                          values="1;1.3;1" keyTimes="0;0.35;1"
+                          begin="8.9s" dur="2.1s" fill="freeze"/>
+      </circle>
+      <circle r="12" fill="white">
+        <animate attributeName="r" values="12;18;12" dur="2s"
+                 begin="9.2s" repeatCount="indefinite"/>
+      </circle>
+    </g>
+
+    <!-- FINAL TEXT -->
+    <g id="final" opacity="0">
+      <animate attributeName="opacity" from="0" to="1"
+               begin="11s" dur="1s" fill="freeze"/>
+      <text x="0" y="170" text-anchor="middle"
+            font-family="Arial" font-size="52" fill="white" font-weight="bold">
+        Dynamic-OS
+      </text>
+      <text x="0" y="210" text-anchor="middle"
+            font-family="Arial" font-size="18" fill="white" opacity="0.7">
+        © Oscyra Solutions AB
+      </text>
+    </g>
+
+  </g>
+</svg>

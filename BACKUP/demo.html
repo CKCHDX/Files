@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Dynamic-OS Balanced GUI Demo</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <style>
+    /*—— Global Reset ——*/
+    * { margin:0; padding:0; box-sizing:border-box; user-select:none; }
+    html, body { width:100%; height:100%; overflow:hidden; background:#0b0c10; font-family:'Segoe UI',sans-serif; }
+
+    /*—— Screen Wrapper ——*/
+    .screen { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; opacity:0; pointer-events:none; transition:opacity .8s ease; }
+    .screen.active { opacity:1; pointer-events:auto; }
+
+    /*—— Boot Screen ——*/
+    #boot { background:#0b0c10; flex-direction:column; }
+    #boot-logo {
+      width:120px; height:120px;  
+      background:conic-gradient(#0cf, #cf0, #f0c, #0cf);
+      border-radius:50%; animation: spin 3s linear infinite, pulse 2s ease-in-out infinite;
+    }
+    @keyframes spin { to { transform:rotate(360deg); } }
+    @keyframes pulse { 0%,100%{filter: drop-shadow(0 0 10px #0cf);} 50%{filter: drop-shadow(0 0 20px #cf0);} }
+    #boot-text { margin-top:1rem; color:#888; font-size:1rem; }
+
+    /*—— Login Screen ——*/
+    #login { background:rgba(11,12,16,0.9); }
+    #iris {
+      width:200px; height:200px; border: 2px solid #0cf; border-radius:50%;
+      backdrop-filter:blur(8px); position:relative; overflow:hidden;
+      animation: iris-open .8s ease-out forwards 1s;
+    }
+    @keyframes iris-open { from { clip-path: circle(100% at 50% 50%); } to { clip-path: circle(40% at 50% 50%); } }
+    #login-panel {
+      position:absolute; top:calc(50% + 100px); transform:translateY(-50%);
+      background:rgba(255,255,255,0.05); padding:30px; border-radius:12px;
+      backdrop-filter:blur(12px); text-align:center; box-shadow:0 0 30px rgba(0,255,255,0.2);
+      animation: fade-in .8s ease forwards 1.5s;
+      opacity:0;
+    }
+    @keyframes fade-in { to { opacity:1; } }
+    #login-panel input {
+      width:220px; padding:10px; margin:1rem 0; border:none; border-radius:6px;
+      background:#1f2026; color:#0cf; text-align:center;
+    }
+    #login-panel button {
+      padding:10px 20px; border:none; border-radius:6px;
+      background:linear-gradient(90deg,#0cf,#cf0); color:#000; font-weight:bold;
+      cursor:pointer; letter-spacing:.05rem;
+    }
+
+    /*—— Desktop Screen ——*/
+    #desktop { background: url('https://images.unsplash.com/photo-1519377345644-937ef9754740?auto=format&fit=crop&w=1950&q=80') center/cover no-repeat; }
+
+    /* Control Hub (center) */
+    #hub {
+      position:relative; width:100px; height:100px;
+      background:rgba(255,255,255,0.1); border-radius:50%;
+      backdrop-filter:blur(10px); cursor:pointer;
+      display:flex; align-items:center; justify-content:center;
+      box-shadow:0 0 20px rgba(0,204,255,0.5);
+      transition: width .4s ease, height .4s ease, border-radius .4s ease;
+    }
+    #hub.open {
+      width:400px; height:400px; border-radius:12px;
+    }
+    #hub-icon { font-size:2.5rem; color:#0cf; }
+
+    /* Panels inside Hub */
+    .panel {
+      position:absolute; width:calc(100% - 40px); height:calc(100% - 40px);
+      top:20px; left:20px; opacity:0; pointer-events:none;
+      display:grid; grid-template-columns:1fr 1fr; grid-template-rows:1fr 1fr;
+      gap:10px; padding:20px; color:#eee;
+      transition: opacity .4s ease .4s;
+    }
+    #hub.open .panel { opacity:1; pointer-events:auto; }
+
+    .tile {
+      background:rgba(0,0,0,0.5); border-radius:8px;
+      display:flex; align-items:center; justify-content:center; font-size:1.2rem;
+      cursor:pointer; transition:transform .2s;
+    }
+    .tile:hover { transform:scale(1.1); }
+
+    /* Tooltip */
+    .tile:hover::after {
+      content:attr(data-name); position:absolute; bottom:110%;
+      background:rgba(0,0,0,0.7); padding:4px 8px; border-radius:4px; font-size:.8rem;
+      white-space:nowrap;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Boot -->
+  <div id="boot" class="screen active">
+    <div id="boot-logo"></div>
+    <div id="boot-text">Initializing Dynamic-OS...</div>
+  </div>
+
+  <!-- Login -->
+  <div id="login" class="screen">
+    <div id="iris"></div>
+    <div id="login-panel">
+      <input type="password" id="pw" placeholder="Enter Access Code">
+      <button onclick="login()">Enter</button>
+    </div>
+  </div>
+
+  <!-- Desktop -->
+  <div id="desktop" class="screen">
+    <div id="hub" onclick="toggleHub(event)">
+      <div id="hub-icon">⇆</div>
+      <div class="panel">
+        <div class="tile" data-name="Terminal" onclick="launch('Terminal')">💻</div>
+        <div class="tile" data-name="Browser"  onclick="launch('Browser')">🌐</div>
+        <div class="tile" data-name="Files"    onclick="launch('Files')">📂</div>
+        <div class="tile" data-name="Settings" onclick="launch('Settings')">⚙️</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Sequence: boot → login → desktop
+    setTimeout(()=>{ show('boot','login'); }, 3500);
+    function login(){
+      if (pw.value==='dyn123'){
+        show('login','desktop');
+      } else alert('Wrong code');
+    }
+    function show(hideId, showId){
+      document.getElementById(hideId).classList.remove('active');
+      document.getElementById(showId).classList.add('active');
+    }
+
+    // Hub open/close
+    function toggleHub(e){
+      // prevent close when clicking tiles
+      if (e.target!==document.getElementById('hub-icon')) return;
+      document.getElementById('hub').classList.toggle('open');
+    }
+
+    // Launch placeholder
+    function launch(name){
+      alert(name + ' launching…');
+    }
+  </script>
+</body>
+</html>

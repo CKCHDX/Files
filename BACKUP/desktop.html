@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Dynamic-OS Next-Gen Linux Desktop UI</title>
+<style>
+  /* Root variables for colors and sizing */
+  :root {
+    --color-bg-light: #e9f5f2;
+    --color-bg-dark: #121b22;
+    --color-text-light: #102a42;
+    --color-text-dark: #e1f0e8;
+    --color-accent: #12d19a;
+    --color-accent-contrast: #0a6b54;
+    --color-notif-bg: #243a4a;
+    --color-notif-text: #c7f5da;
+    --color-sidebar-bg: #15292f;
+    --color-sidebar-hover: #0d1f25;
+    --color-panel-bg: rgba(23,40,49,0.9);
+    --font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+
+    --sidebar-width: 80px;
+    --topbar-height: 50px;
+    --border-radius: 12px;
+    --transition-fast: 0.18s ease;
+    --transition-smooth: 0.35s ease-in-out;
+  }
+
+  /* Reset & base */
+  * {
+    box-sizing: border-box;
+  }
+  body {
+    margin: 0; padding: 0;
+    font-family: var(--font-family);
+    background: var(--color-bg-light);
+    color: var(--color-text-light);
+    user-select: none;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    transition: background var(--transition-smooth);
+  }
+  body.dark-mode {
+    background: var(--color-bg-dark);
+    color: var(--color-text-dark);
+  }
+  /* Layout container */
+  #desktop {
+    flex: 1 1 auto;
+    display: flex;
+    height: calc(100vh - var(--topbar-height));
+    overflow: hidden;
+  }
+
+  /* Top bar (System status and quick settings) */
+  .topbar {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    height: var(--topbar-height);
+    background: var(--color-panel-bg);
+    backdrop-filter: saturate(180%) blur(8px);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 20px;
+    z-index: 110;
+    color: var(--color-accent);
+    box-shadow: 0 1px 8px rgb(0 0 0 / 0.25);
+    user-select: none;
+  }
+  .topbar-left,
+  .topbar-right {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+  }
+  .topbar .clock {
+    font-weight: 600;
+    font-size: 1.15rem;
+    letter-spacing: 0.08em;
+  }
+  .topbar button {
+    background: transparent;
+    border: none;
+    color: var(--color-accent);
+    font-size: 1.15rem;
+    cursor: pointer;
+    padding: 6px 12px;
+    border-radius: var(--border-radius);
+    transition: background var(--transition-fast);
+  }
+  .topbar button:hover, .topbar button:focus {
+    background: var(--color-accent);
+    color: var(--color-accent-contrast);
+    outline: none;
+  }
+  .topbar input[type="search"] {
+    border: none;
+    border-radius: var(--border-radius);
+    padding: 6px 14px;
+    min-width: 280px;
+    font-size: 1rem;
+    color: var(--color-text-light);
+    transition: background var(--transition-fast), color var(--transition-fast);
+  }
+  body.dark-mode .topbar input[type="search"] {
+    background: #22333b66;
+    color: var(--color-text-dark);
+  }
+  .topbar input[type="search"]::placeholder {
+    color: #9cbfba;
+  }
+  /* Sidebar (Minimalist, customizable) */
+  .sidebar {
+    width: var(--sidebar-width);
+    background: var(--color-sidebar-bg);
+    box-shadow: 1px 0 10px rgb(0 0 0 / 0.35);
+    display: flex;
+    flex-direction: column;
+    padding: 14px 0;
+    overflow-y: auto;
+    transition: width 0.3s ease;
+  }
+  .sidebar.dark-mode {
+    background: #0d1b20;
+  }
+  .sidebar button,
+  .sidebar .favorite-app {
+    background: transparent;
+    border: none;
+    color: #9cbfba;
+    width: 60px;
+    height: 60px;
+    margin: 6px auto;
+    font-size: 1.9rem;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background var(--transition-fast);
+  }
+  .sidebar button:hover,
+  .sidebar button:focus,
+  .sidebar .favorite-app:hover {
+    background: var(--color-sidebar-hover);
+    color: var(--color-accent);
+    outline: none;
+  }
+  .sidebar .active {
+    background: var(--color-accent);
+    color: var(--color-accent-contrast);
+  }
+
+  /* Workspace indicator (below apps) */
+  .workspace-indicator {
+    margin-top: auto;
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    padding-bottom: 12px;
+  }
+  .workspace-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #3cb78d88;
+    cursor: pointer;
+    transition: background var(--transition-fast);
+  }
+  .workspace-dot.active {
+    background: var(--color-accent);
+  }
+  .workspace-dot:hover {
+    background: var(--color-accent);
+  }
+
+  /* Central workspace: supports dynamic window management */
+  #workspace {
+    flex: 1 1 auto;
+    position: relative;
+    margin-left: 0;
+    overflow: hidden;
+    background: linear-gradient(135deg, #effafa, #c1dff3);
+    border-left: 1px solid #b0cbd9;
+    transition: background var(--transition-fast);
+  }
+  body.dark-mode #workspace {
+    background: linear-gradient(135deg, #081219, #122833);
+    border-color: #0f2d3a;
+  }
+
+  /* Simulated window style */
+  .window {
+    position: absolute;
+    background: white;
+    box-shadow: 0 5px 22px rgb(0 0 0 / 0.15);
+    border-radius: 14px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    resize: both;
+    min-width: 300px;
+    min-height: 200px;
+    user-select: text;
+    transition: box-shadow 0.3s;
+  }
+  body.dark-mode .window {
+    background: #1a2c3d;
+    box-shadow: 0 5px 22px rgb(18 43 56 / 0.5);
+    color: var(--color-text-dark);
+  }
+  .window-header {
+    background: var(--color-accent);
+    color: var(--color-accent-contrast);
+    padding: 10px 14px;
+    font-weight: 700;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: move;
+    user-select: none;
+  }
+  .window-header .window-title {
+    flex-grow: 1;
+  }
+  .window-header button {
+    background: transparent;
+    border: none;
+    color: inherit;
+    font-size: 1.3rem;
+    cursor: pointer;
+    transition: color var(--transition-fast);
+  }
+  .window-header button:hover {
+    color: #b8e6d5;
+  }
+  .window-content {
+    padding: 14px 18px;
+    overflow: auto;
+    flex-grow: 1;
+    user-select: text;
+  }
+  /* Window states */
+  .window.minimized {
+    display: none;
+  }
+  .window.maximized {
+    top: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    resize: none !important;
+  }
+
+  /* App launcher panel */
+  #app-launcher {
+    position: fixed;
+    top: var(--topbar-height);
+    left: var(--sidebar-width);
+    bottom: 0;
+    width: 420px;
+    background: var(--color-panel-bg);
+    box-shadow: 6px 0 28px rgb(0 0 0 / 0.38);
+    backdrop-filter: saturate(180%) blur(12px);
+    overflow-y: auto;
+    border-top-right-radius: var(--border-radius);
+    border-bottom-right-radius: var(--border-radius);
+    padding: 20px 26px;
+    color: var(--color-accent);
+    display: none;
+    z-index: 150;
+    user-select: none;
+  }
+  body.dark-mode #app-launcher {
+    color: var(--color-text-dark);
+    background: rgba(20, 36, 47, 0.95);
+  }
+  #app-launcher h2 {
+    margin: 0 0 12px 0;
+    font-weight: 700;
+    font-size: 1.25rem;
+    letter-spacing: 0.07em;
+  }
+  #app-launcher-search {
+    width: 100%;
+    padding: 8px 14px;
+    border-radius: var(--border-radius);
+    border: 1px solid transparent;
+    background: rgba(255 255 255 / 0.1);
+    color: inherit;
+    font-size: 1rem;
+    margin-bottom: 20px;
+    outline: none;
+    transition: border-color var(--transition-fast);
+  }
+  #app-launcher-search:focus {
+    border-color: var(--color-accent);
+    background: rgba(255 255 255 / 0.15);
+  }
+  #app-list {
+    max-height: calc(100vh - 180px);
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .app-item {
+    background: transparent;
+    border: none;
+    padding: 12px 20px;
+    font-size: 1.12rem;
+    color: var(--color-accent);
+    cursor: pointer;
+    border-radius: var(--border-radius);
+    text-align: left;
+    font-weight: 600;
+    transition: background var(--transition-fast);
+  }
+  .app-item:hover,
+  .app-item:focus {
+    background: var(--color-accent);
+    color: var(--color-accent-contrast);
+    outline: none;
+  }
+  body.dark-mode .app-item:hover,
+  body.dark-mode .app-item:focus {
+    background: #0ebd80;
+    color: #0b4b37;
+  }
+  /* Notifications center */
+  #notifications-center {
+    position: fixed;
+    top: var(--topbar-height);
+    right: var(--sidebar-width);
+    width: 300px;
+    max-height: 70vh;
+    background: var(--color-notif-bg);
+    color: var(--color-notif-text);
+    border-radius: var(--border-radius);
+    box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+    overflow-y: auto;
+    padding: 16px 20px;
+    backdrop-filter: blur(14px);
+    display: none;
+    z-index: 150;
+    user-select: none;
+  }
+  #notifications-center h3 {
+    margin-top: 0;
+    font-weight: 700;
+    font-size: 1.25rem;
+  }
+  .notif-item {
+    padding: 12px 12px;
+    margin-bottom: 12px;
+    border-radius: 10px;
+    background: #19515a99;
+    font-size: 0.95rem;
+    line-height: 1.4em;
+    transition: background 0.2s;
+  }
+  .notif-item:hover {
+    background: #12d19add;
+    color: #0a6b54;
+  }
+
+  /* Widget system - modular and extensible on top-left */
+  .widgets-container {
+    position: absolute;
+    top: var(--topbar-height);
+    left: var(--sidebar-width);
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    max-width: 320px;
+    overflow-y: auto;
+    height: calc(100vh - var(--topbar-height));
+    user-select: none;
+    z-index: 20;
+  }
+  .widget {
+    background: var(--color-panel-bg);
+    padding: 16px 22px;
+    border-radius: var(--border-radius);
+    box-shadow: 0 6px 20px rgb(18 209 154 / 0.20);
+    color: var(--color-accent);
+    transition: box-shadow var(--transition-fast), background var(--transition-fast);
+  }
+  body.dark-mode .widget {
+    background: #143431cc;
+    color: var(--color-text-dark);
+  }
+  .widget b {
+    font-weight: 600;
+    font-size: 1.12rem;
+  }
+  .widget small {
+    font-size: 0.9rem;
+    display: block;
+    margin-top: 4px;
+    color: #8bcdc5;
+  }
+  /* Widget close button */
+  .widget .close-btn {
+    position: absolute;
+    top: 8px;
+    right: 12px;
+    background: transparent;
+    border: none;
+    color: var(--color-accent);
+    font-size: 1.18rem;
+    cursor: pointer;
+    border-radius: 8px;
+    padding: 2px 10px;
+    transition: background var(--transition-fast);
+  }
+  .widget .close-btn:hover {
+    background: var(--color-accent);
+    color: var(--color-accent-contrast);
+  }
+
+  /* Window management overlay: visual feedback when dragging/sizing etc */
+  .dragging {
+    box-shadow: 0 0 28px var(--color-accent);
+    border: 2px solid var(--color-accent);
+  }
+
+  /* Accessibility controls container */
+  .accessibility-controls {
+    position: fixed;
+    bottom: 25px;
+    right: 110px;
+    display: flex;
+    gap: 14px;
+    z-index: 250;
+  }
+  .accessibility-controls button {
+    border: none;
+    background: var(--color-panel-bg);
+    color: var(--color-accent);
+    font-weight: 600;
+    border-radius: var(--border-radius);
+    padding: 10px 16px;
+    cursor: pointer;
+    transition: background var(--transition-fast);
+  }
+  .accessibility-controls button:hover {
+    background: var(--color-accent);
+    color: var(--color-accent-contrast);
+  }
+  body.dark-mode .accessibility-controls button {
+    background: #143a3c99;
+  }
+  /* Dark mode styles */
+  body.dark-mode {
+    --color-accent: #0fbf80;
+    --color-accent-contrast: #042a1f;
+  }
+
+  /* Responsive for smaller screens */
+  @media (max-width: 900px) {
+    #app-launcher {
+      width: 100vw;
+      left: 0;
+      border-radius: 0;
+      height: calc(100vh - var(--topbar-height));
+    }
+    .sidebar {
+      display: none;
+    }
+    .widgets-container {
+      display: none;
+    }
+    .accessibility-controls {
+      right: 10px;
+      bottom: 10px;
+    }
+  }
+</style>
+</head>
+<body>
+  <div class="topbar" role="banner" aria-label="System status bar">
+    <div class="topbar-left">
+      <button id="btnAppLauncher" aria-haspopup="true" aria-expanded="false" aria-controls="app-launcher" title="Open App Launcher">☰ Apps</button>
+      <input id="topbarSearch" type="search" placeholder="Search apps, files, settings..." aria-label="Search apps, files, and settings" autocomplete="off"/>
+    </div>
+    <div class="topbar-right">
+      <button id="btnNotifications" aria-haspopup="true" aria-expanded="false" title="Notifications">🔔</button>
+      <span class="clock" aria-live="polite" aria-atomic="true" id="clockLabel"></span>
+      <button id="btnUserProfile" aria-haspopup="true" aria-expanded="false" title="User Profile">👤 User</button>
+    </div>
+  </div>
+
+  <div id="desktop">
+    <nav class="sidebar" aria-label="Main sidebar">
+      <button title="Home" class="favorite-app active" aria-pressed="true" tabindex="0" aria-label="Home">🏠</button>
+      <button title="Files" class="favorite-app" tabindex="0" aria-label="Files manager">📁</button>
+      <button title="Browser" class="favorite-app" tabindex="0" aria-label="Web browser">🌐</button>
+      <button title="Code" class="favorite-app" tabindex="0" aria-label="Code editor">💻</button>
+      <button title="Music" class="favorite-app" tabindex="0" aria-label="Music player">🎵</button>
+      <button title="Settings" class="favorite-app" tabindex="0" aria-label="System settings">⚙️</button>
+      <div class="workspace-indicator" role="tablist" aria-label="Workspace switcher" tabindex="0">
+        <button class="workspace-dot active" role="tab" aria-selected="true" aria-label="Workspace 1"></button>
+        <button class="workspace-dot" role="tab" aria-selected="false" aria-label="Workspace 2"></button>
+        <button class="workspace-dot" role="tab" aria-selected="false" aria-label="Workspace 3"></button>
+      </div>
+    </nav>
+
+    <main id="workspace" role="main" aria-label="Workspace with windows">
+
+      <!-- Example of app windows; drag and resize enabled -->
+      <section role="dialog" aria-modal="false" aria-labelledby="win_dev_title" tabindex="-1" class="window" id="winDevStudio" style="top: 70px; left: 110px; width: 420px; height: 300px;" aria-live="polite">
+        <header class="window-header" aria-grabbed="false" aria-label="Dev Studio window header">
+          <span class="window-title" id="win_dev_title">Dev Studio</span>
+          <div>
+            <button aria-label="Minimize Dev Studio window" onclick="minimizeWindow('winDevStudio')">–</button>
+            <button aria-label="Maximize or restore Dev Studio window" onclick="toggleMaximizeWindow('winDevStudio')">▢</button>
+            <button aria-label="Close Dev Studio window" onclick="closeWindow('winDevStudio')">×</button>
+          </div>
+        </header>
+        <div class="window-content">
+          <p>Build, write code, debug projects with your favorite tools.</p>
+          <textarea style="width: 100%; height: 150px; resize: none;">// Your code here...</textarea>
+        </div>
+      </section>
+
+      <section role="dialog" aria-modal="false" aria-labelledby="win_terminal_title" tabindex="-1" class="window" id="winTerminal" style="top: 110px; left: 580px; width: 380px; height: 280px;" aria-live="polite">
+        <header class="window-header" aria-grabbed="false" aria-label="Terminal window header">
+          <span class="window-title" id="win_terminal_title">Terminal</span>
+          <div>
+            <button aria-label="Minimize Terminal window" onclick="minimizeWindow('winTerminal')">–</button>
+            <button aria-label="Maximize or restore Terminal window" onclick="toggleMaximizeWindow('winTerminal')">▢</button>
+            <button aria-label="Close Terminal window" onclick="closeWindow('winTerminal')">×</button>
+          </div>
+        </header>
+        <div class="window-content" style="background:#0a1b25; color:#32ff9b; font-family: monospace; font-size: 14px;">
+          <pre id="terminalContent">$ uname -a\nLinux dynamic-os 5.15.12 #1 SMP ...</pre>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- App Launcher Panel -->
+  <aside id="app-launcher" role="region" aria-label="Application launcher">
+    <h2>Applications</h2>
+    <input id="app-launcher-search" type="search" placeholder="Search apps..." aria-label="Search applications" autocomplete="off" />
+    <div id="app-list" role="list" tabindex="0" aria-live="polite">
+      <button class="app-item" role="listitem" tabindex="0" data-app="Dev Studio">Dev Studio 💻</button>
+      <button class="app-item" role="listitem" tabindex="0" data-app="Browser">Browser 🌐</button>
+      <button class="app-item" role="listitem" tabindex="0" data-app="Files">Files 📁</button>
+      <button class="app-item" role="listitem" tabindex="0" data-app="Terminal">Terminal 💻</button>
+      <button class="app-item" role="listitem" tabindex="0" data-app="Music">Music 🎵</button>
+      <button class="app-item" role="listitem" tabindex="0" data-app="Gallery">Gallery 🖼️</button>
+      <button class="app-item" role="listitem" tabindex="0" data-app="Settings">Settings ⚙️</button>
+    </div>
+  </aside>
+
+  <!-- Notifications Center -->
+  <aside id="notifications-center" role="region" aria-label="Notifications center" tabindex="0">
+    <h3>Notifications</h3>
+    <div class="notif-item" tabindex="0">System update completed successfully.</div>
+    <div class="notif-item" tabindex="0">New messages in developer chat.</div>
+    <div class="notif-item" tabindex="0">Battery fully charged.</div>
+  </aside>
+
+  <!-- Widgets -->
+  <div class="widgets-container" role="complementary" aria-label="System widgets">
+    <section class="widget" id="widget-weather" tabindex="0" aria-label="Weather widget">
+      <button class="close-btn" title="Close Weather widget" aria-label="Close widget" onclick="closeWidget('widget-weather')">×</button>
+      <b>🌤️ Weather</b>
+      <small>22°C, Clear skies, light breeze</small>
+    </section>
+    <section class="widget" id="widget-calendar" tabindex="0" aria-label="Calendar widget">
+      <button class="close-btn" title="Close Calendar widget" aria-label="Close widget" onclick="closeWidget('widget-calendar')">×</button>
+      <b>📅 Calendar</b>
+      <small>Saturday, July 26, 2025</small>
+    </section>
+    <section class="widget" id="widget-monitor" tabindex="0" aria-label="System performance widget">
+      <button class="close-btn" title="Close performance widget" aria-label="Close widget" onclick="closeWidget('widget-monitor')">×</button>
+      <b>⚡ System Monitor</b>
+      <small>CPU: 38% / RAM: 46% / Network: 120 Mbps</small>
+    </section>
+  </div>
+
+  <!-- Accessibility controls -->
+  <div class="accessibility-controls" role="region" aria-label="Accessibility controls">
+    <button id="toggleA11y" title="Toggle accessibility mode (larger text)">A11y</button>
+    <button id="toggleDark" title="Toggle dark mode">Dark Mode</button>
+    <button id="toggleContrast" title="Toggle high contrast mode">Contrast</button>
+  </div>
+
+<script>
+  // Clock update
+  const clockLabel = document.getElementById("clockLabel");
+  function updateClock() {
+    const now = new Date();
+    const h = now.getHours().toString().padStart(2, '0');
+    const m = now.getMinutes().toString().padStart(2, '0');
+    clockLabel.textContent = `${h}:${m}`;
+  }
+  updateClock();
+  setInterval(updateClock, 60000);
+
+  // Sidebar workspace switching (demo)
+  const workspaceDots = document.querySelectorAll(".workspace-dot");
+  workspaceDots.forEach((dot, idx) => {
+    dot.addEventListener("click", () => {
+      workspaceDots.forEach(d => d.classList.remove("active"));
+      dot.classList.add("active");
+      // For demo, this could toggle widgets or background, etc.
+      alert(`Switched to workspace ${idx+1}`);
+    });
+  });
+
+  // Topbar buttons toggles
+  const appLauncherBtn = document.getElementById("btnAppLauncher");
+  const appLauncherPanel = document.getElementById("app-launcher");
+  const notificationsBtn = document.getElementById("btnNotifications");
+  const notifCenter = document.getElementById("notifications-center");
+  const userProfileBtn = document.getElementById("btnUserProfile");
+
+  function togglePanel(panel, activeBtn) {
+    const isVisible = panel.style.display === "block";
+    closeAllPanels();
+    if (!isVisible) {
+      panel.style.display = "block";
+      activeBtn.setAttribute("aria-expanded", "true");
+      activeBtn.classList.add("active");
+    }
+  }
+  function closeAllPanels() {
+    [appLauncherPanel, notifCenter].forEach(panel => panel.style.display = "none");
+    [appLauncherBtn, notificationsBtn, userProfileBtn].forEach(btn => {
+      btn.setAttribute("aria-expanded", "false");
+      btn.classList.remove("active");
+    });
+  }
+
+  appLauncherBtn.onclick = () => togglePanel(appLauncherPanel, appLauncherBtn);
+  notificationsBtn.onclick = () => togglePanel(notifCenter, notificationsBtn);
+  userProfileBtn.onclick = () => alert("User Profile Demo: Visionary User, Developer.");
+
+  // Clicking outside panels closes them
+  window.addEventListener("click", (e) => {
+    if (!appLauncherPanel.contains(e.target) && e.target !== appLauncherBtn &&
+        !notifCenter.contains(e.target) && e.target !== notificationsBtn) {
+      closeAllPanels();
+    }
+  });
+
+  // App launcher fuzzy search demo
+  const appSearchInput = document.getElementById("app-launcher-search");
+  const appList = document.getElementById("app-list");
+  const apps = [...appList.children];
+
+  function fuzzySearchApps(query) {
+    query = query.toLowerCase().trim();
+    apps.forEach(button => {
+      const text = button.textContent.toLowerCase();
+      button.style.display = text.includes(query) ? "" : "none";
+    });
+  }
+  appSearchInput.addEventListener("input", e => {
+    fuzzySearchApps(e.target.value);
+  });
+
+  // Accessibility toggles
+  document.getElementById("toggleDark").onclick = () => {
+    document.body.classList.toggle("dark-mode");
+  };
+  document.getElementById("toggleContrast").onclick = () => {
+    document.body.classList.toggle("high-contrast");
+  };
+  document.getElementById("toggleA11y").onclick = () => {
+    document.body.classList.toggle("a11y-mode");
+  };
+
+  // Window management: basic minimize, maximize, close simulation
+  function minimizeWindow(id) {
+    const win = document.getElementById(id);
+    if (win) win.classList.add("minimized");
+  }
+  function closeWindow(id) {
+    const win = document.getElementById(id);
+    if (win) win.style.display = "none";
+  }
+  function toggleMaximizeWindow(id) {
+    const win = document.getElementById(id);
+    if (win) {
+      if (win.classList.contains("maximized")) {
+        win.classList.remove("maximized");
+      } else {
+        win.classList.add("maximized");
+      }
+    }
+  }
+
+  // Widget close buttons
+  function closeWidget(id) {
+    const widget = document.getElementById(id);
+    if (widget) widget.style.display = "none";
+  }
+
+  // Make windows draggable
+  let draggedWindow = null;
+  let offsetX, offsetY;
+  
+  function onMouseDown(e) {
+    const header = e.target.closest(".window-header");
+    if (!header) return;
+    draggedWindow = header.parentElement;
+    offsetX = e.clientX - draggedWindow.getBoundingClientRect().left;
+    offsetY = e.clientY - draggedWindow.getBoundingClientRect().top;
+    draggedWindow.style.zIndex = 101;
+    document.addEventListener("mousemove", onMouseMove);
+    document.addEventListener("mouseup", onMouseUp);
+    e.preventDefault();
+  }
+  function onMouseMove(e) {
+    if (!draggedWindow) return;
+    let nx = e.clientX - offsetX;
+    let ny = e.clientY - offsetY;
+    // Keep inside workspace bounds (approximate)
+    const ws = document.getElementById("workspace").getBoundingClientRect();
+    const winRect = draggedWindow.getBoundingClientRect();
+    nx = Math.min(Math.max(nx, 0), ws.width - winRect.width);
+    ny = Math.min(Math.max(ny, 0), ws.height - winRect.height);
+    draggedWindow.style.left = nx + "px";
+    draggedWindow.style.top = ny + "px";
+  }
+  function onMouseUp() {
+    if (draggedWindow) draggedWindow.style.zIndex = 100;
+    draggedWindow = null;
+    document.removeEventListener("mousemove", onMouseMove);
+    document.removeEventListener("mouseup", onMouseUp);
+  }
+  document.addEventListener("mousedown", onMouseDown);
+
+</script>
+</body>
+</html>

@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Dynamic-OS - Booting...</title>
+  <style>
+    html, body {height:100%;margin:0;overflow:hidden;background:#13203a;}
+    body {display:flex;justify-content:center;align-items:center;height:100vh;}
+    .boot-container {
+      text-align:center;
+      color:#fff;
+      font-family:'Segoe UI',Ubuntu,Arial,sans-serif;
+      animation:fadein 2.2s;
+      width:100vw; height:100vh;
+      background:
+        radial-gradient(circle at 75% 25%, #2baff9 5%, #1f2239 50%, transparent 80%),
+        radial-gradient(circle at 30% 90%, #7ce78d44 0%, #18304b 85%, transparent 100%);
+      transition:background 1.2s;
+    }
+    .logo {
+      margin-top:56px;
+      margin-bottom:18px;
+      font-size:80px;
+      font-weight:700;
+      letter-spacing:0.24em;
+      background:linear-gradient(94deg,#2baff9 30%,#7ce78d 60%,#49cfff 80%);
+      -webkit-background-clip:text;
+      -webkit-text-fill-color:transparent;
+      animation:waves 2.8s infinite alternate;
+    }
+    @keyframes fadein {from{opacity:0} to{opacity:1}}
+    @keyframes waves {0%{filter:hue-rotate(0deg);}100%{filter:hue-rotate(10deg) saturate(140%);}}
+    .bar {
+      border-radius:22px;
+      background:linear-gradient(84deg,#1dfdc9,#3fdfff 60%,#5cc7ff 100%);
+      width:120px;height:12px;margin:38px auto 0;
+      box-shadow:0 1px 12px #2baff966;
+      overflow:hidden;position:relative;
+    }
+    .bar-fill {
+      background:linear-gradient(90deg,#fff,#49cfff 70%,#7ce78d);
+      height:100%;width:0;
+      animation:progress 3s cubic-bezier(.62,.09,.33,1) forwards;
+      border-radius:22px;
+    }
+    @keyframes progress {to{width:100%;}}
+    .subtitle {
+      margin-top:36px;
+      color:#b9fff5;
+      font-size:1.45em;
+      letter-spacing:1.2px;
+      animation:fadein 1.7s;
+    }
+  </style>
+</head>
+<body>
+  <div class="boot-container">
+    <div class="logo">DYNAMIC<span style="font-weight:300;">-OS</span></div>
+    <div class="bar"><div class="bar-fill"></div></div>
+    <div class="subtitle">Booting your Dynamic Experience…</div>
+  </div>
+  <script>
+    setTimeout(()=>{window.location='login.html';},3400);
+  </script>
+</body>
+</html>

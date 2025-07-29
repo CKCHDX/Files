@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>PerfectOS Login</title>
+  <style>
+    html,body{height:100%;margin:0;background:radial-gradient(ellipse at center, #243255 0%, #222a38 100%);}
+    body {display:flex;justify-content:center;align-items:center;height:100vh;}
+    .login-card {
+      background:rgba(29,38,54,0.97);
+      border-radius:24px;
+      box-shadow:0 8px 24px 0 #0002,0 2px 8px 0 #2efbf7bb;
+      padding:48px 56px;
+      text-align:center;
+      width:380px;
+      animation:popIn 1.6s cubic-bezier(0.62, 1.8, 0.36, 0.88);
+    }
+    @keyframes popIn{0%{transform:scale(.7);opacity:0}80%{transform:scale(1.08)}100%{transform:scale(1);opacity:1}}
+    .avatar{
+      background:linear-gradient(135deg,#38caff,#6abf4b);
+      border-radius:50%;width:80px;height:80px;
+      display:inline-block;margin-bottom:24px;line-height:80px;
+      font-size:2.5em;color:#fff;box-shadow:0 4px 16px #2efbf799;
+    }
+    .username{color:#e9fbfd;font-size:1.9em;margin-bottom:33px;margin-top:6px}
+    .login-btn {
+      margin-top:24px;
+      border:none;
+      background:linear-gradient(90deg,#38caff,#6abf4b);
+      color:#fff;font-size:1.3em;
+      padding:13px 38px;
+      border-radius:9px;
+      cursor:pointer;
+      font-weight:600;
+      box-shadow:0 4px 14px #38caff33;
+      transition:0.17s all;
+    }
+    .login-btn:hover {filter:brightness(1.21);}
+  </style>
+</head>
+<body>
+  <div class="login-card">
+    <div class="avatar" aria-label="User">👤</div>
+    <div class="username">Welcome, Visionary User!</div>
+    <button class="login-btn" onclick="window.location='desktop.html'">Log in</button>
+    <div style="color:#8cace2;margin-top:32px;font-size:1.05em;">No password needed for demo</div>
+  </div>
+</body>
+</html>
