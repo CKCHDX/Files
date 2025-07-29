@@ -1,0 +1,6 @@
+[Desktop Entry]
+Name=Oscyra Session
+Comment=Custom Oscyra Session Launcher
+Exec=/usr/bin/oscyra-session
+TryExec=/usr/bin/oscyra-session
+Type=Application

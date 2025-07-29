@@ -1,0 +1,58 @@
+Converting =}-[Linux]Kde neon -> [Linux]Dynamic-OS
+
+1. Systemd Custom Service for Oscyra DM
+File: /etc/systemd/system/oscyra-dm.service
+
+[Unit]
+Description=Oscyra Custom Display Manager
+After=network.target systemd-user-sessions.service
+
+[Service]
+User=guest
+Environment=DISPLAY=:0
+ExecStart=/usr/bin/oscyra-session.sh
+Restart=always
+
+[Install]
+WantedBy=graphical.target
+
+2. copy oscyra files
+	[Oscyra], [oscyra-session.sh], oscyra-installer]
+	[oscyra-start], [oscyra-session.desktop], [oscyra-login]
+      	move > /usr/bin/ <--here
+
+3. Disable other DMs
+	systemctl disable sddm
+	systemctl stop sddm
+
+4. Enable custom DM service
+	systemctl daemon-reload
+	systemctl enable oscyra-dm.service
+
+5. edit tty1 for autologin
+	create/edit > /etc/systemd/system/getty@tty1.service.d/override.conf
+	#------------#
+	#|[Service] |#
+	#|ExecStart=|#-------------------------------------------------#
+	#|ExecStart=-/sbin/agetty --autologin guest --noclear %I $TERM|#
+	#--------------------------------------------------------------#
+
+
+6. Check log for correct setup
+	systemctl status oscyra-dm.service
+	journalctl -u oscyra-dm.service -b
+
+
+Quick validation:
+
+Step 1: systemd service is correctly set, running custom script as user guest(default) on DISPLAY=:0.
+
+Step 2: files copied to /usr/bin/ with proper permissions assumed.
+
+Step 3: disables and stops sddm to prevent conflicts.
+
+Step 4: reloads systemd and enables custom service.
+
+Step 5: autologin on tty1 for guest ensures custom service starts automatically after boot/login.
+
+Step 6: log checking step for troubleshooting.

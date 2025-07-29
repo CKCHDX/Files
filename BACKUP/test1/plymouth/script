@@ -1,0 +1,30 @@
+# Plymouth script to animate frames in ./frames/
+
+i = 0;
+frame_count = 600;
+
+while (Booting()) {
+    # Build the filename string for the current frame
+    frame_path = sprintf("frames/frame_%04d.png", i);
+
+    # Load and display the image
+    image = Image(frame_path);
+    sprite = Sprite(image);
+    sprite.SetPosition(ScreenWidth()/2 - image.GetWidth()/2,
+                       ScreenHeight()/2 - image.GetHeight()/2);
+    sprite.Show();
+
+    # Wait a short moment (adjust for animation speed)
+    Sleep(50);  # 50 ms between frames (~20 fps)
+
+    # Hide current frame before showing the next one
+    sprite.Hide();
+
+    # Advance to next frame
+    i = i + 1;
+
+    # Loop back to start if you want it to repeat
+    if (i >= frame_count) {
+        i = 0;
+    }
+}

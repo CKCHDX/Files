@@ -1,0 +1,4 @@
+/usr/bin/Oscyra &
+
+wait
+
