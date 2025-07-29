@@ -1,49 +1,369 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>PerfectOS Login</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Secure Terminal</title>
   <style>
-    html,body{height:100%;margin:0;background:radial-gradient(ellipse at center, #243255 0%, #222a38 100%);}
-    body {display:flex;justify-content:center;align-items:center;height:100vh;}
-    .login-card {
-      background:rgba(29,38,54,0.97);
-      border-radius:24px;
-      box-shadow:0 8px 24px 0 #0002,0 2px 8px 0 #2efbf7bb;
-      padding:48px 56px;
-      text-align:center;
-      width:380px;
-      animation:popIn 1.6s cubic-bezier(0.62, 1.8, 0.36, 0.88);
+    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700&display=swap');
+
+    body {
+      margin: 0;
+      height: 100vh;
+      background: black;
+      font-family: 'Orbitron', sans-serif;
+      color: #00f9ff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow: hidden;
+      user-select: none;
+      background-image:
+        linear-gradient(rgba(0,255,255,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,255,255,0.03) 1px, transparent 1px);
+      background-size: 40px 40px;
     }
-    @keyframes popIn{0%{transform:scale(.7);opacity:0}80%{transform:scale(1.08)}100%{transform:scale(1);opacity:1}}
-    .avatar{
-      background:linear-gradient(135deg,#38caff,#6abf4b);
-      border-radius:50%;width:80px;height:80px;
-      display:inline-block;margin-bottom:24px;line-height:80px;
-      font-size:2.5em;color:#fff;box-shadow:0 4px 16px #2efbf799;
+
+    /* ------------------- Login Container ------------------- */
+    #loginContainer {
+      background: rgba(0,0,0,0.9);
+      padding: 40px 50px;
+      border: 2px solid #00f9ff;
+      box-shadow: 0 0 20px #00f9ff;
+      width: 360px;
+      text-align: center;
+      position: relative;
+      z-index: 1;
+      transition: opacity 0.5s ease, transform 0.5s ease;
     }
-    .username{color:#e9fbfd;font-size:1.9em;margin-bottom:33px;margin-top:6px}
-    .login-btn {
-      margin-top:24px;
-      border:none;
-      background:linear-gradient(90deg,#38caff,#6abf4b);
-      color:#fff;font-size:1.3em;
-      padding:13px 38px;
-      border-radius:9px;
-      cursor:pointer;
-      font-weight:600;
-      box-shadow:0 4px 14px #38caff33;
-      transition:0.17s all;
+
+    #title {
+      font-size: 2.5em;
+      font-weight: 700;
+      letter-spacing: 4px;
+      margin-bottom: 35px;
     }
-    .login-btn:hover {filter:brightness(1.21);}
+
+    input[type="password"] {
+      width: 100%;
+      font-size: 1.6em;
+      padding: 12px 15px;
+      background: transparent;
+      border: 2px solid #00f9ff;
+      color: #00f9ff;
+      letter-spacing: 10px;
+      text-align: center;
+      outline: none;
+      caret-color: #00f9ff;
+      box-shadow: 0 0 8px #00f9ff;
+      transition: box-shadow 0.3s ease;
+    }
+
+    input[type="password"]:focus {
+      box-shadow: 0 0 15px #00f9ff;
+    }
+
+    button {
+      margin-top: 25px;
+      width: 100%;
+      padding: 14px 0;
+      font-size: 1.3em;
+      color: #000;
+      background: #00f9ff;
+      border: none;
+      cursor: pointer;
+      text-transform: uppercase;
+      font-weight: 700;
+      letter-spacing: 3px;
+      box-shadow: 0 0 20px #00f9ff;
+      transition: background 0.3s ease, box-shadow 0.3s ease;
+      user-select: none;
+    }
+
+    button:hover {
+      background: #00b8cc;
+      box-shadow: 0 0 30px #00b8cc;
+    }
+
+    /* ------------------- Overlay ------------------- */
+    #overlay {
+      position: fixed;
+      inset: 0;
+      background: black;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      pointer-events: none;
+      opacity: 0;
+      visibility: hidden;
+      z-index: 9999;
+      flex-direction: column;
+    }
+
+    #overlay.active {
+      pointer-events: auto;
+      opacity: 1;
+      visibility: visible;
+    }
+
+    #overlayMessage {
+      font-size: 6em;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 12px;
+      color: #00f9ff;
+      white-space: nowrap;
+      filter: drop-shadow(0 0 10px #00f9ff);
+    }
+
+    #overlayMessage.denied {
+      color: #ff0044;
+      filter: drop-shadow(0 0 20px #ff0044);
+      animation: deniedShake 0.7s ease-in-out 3;
+    }
+
+    #overlayMessage.granted {
+        animation: grantedZoomPulse 2.5s forwards;
+        filter: drop-shadow(0 0 10px #00f9ff);
+    }
+
+    #overlayMessage.granted::before,
+    #overlayMessage.granted::after {
+      content: attr(data-text);
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%;
+      height: 100%;
+      opacity: 0.8;
+      color: #00f9ff;
+    }
+
+    #overlayMessage.granted::before {
+      left: 2px;
+      text-shadow: -2px 0 red;
+      animation: glitchRed 3s infinite;
+    }
+
+    #overlayMessage.granted::after {
+      left: -2px;
+      text-shadow: -2px 0 blue;
+      animation: glitchBlue 3s infinite;
+    }
+
+    @keyframes deniedShake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-10px); }
+      50% { transform: translateX(10px); }
+      75% { transform: translateX(-10px); }
+    }
+
+    @keyframes glitchRed {
+      10%, 30% { transform: translate(-2px, 0); }
+    }
+
+    @keyframes glitchBlue {
+      20%, 40% { transform: translate(2px, 0); }
+    }
+
+      @keyframes grantedZoomPulse {
+          0% {
+              opacity: 0;
+              transform: scale(0.6);
+              filter: brightness(0.3) blur(1px);
+          }
+
+          20% {
+              opacity: 1;
+              transform: scale(1.05);
+              filter: brightness(1.2);
+          }
+
+          40% {
+              transform: scale(1);
+              filter: brightness(1.8);
+          }
+
+          70% {
+              transform: scale(1.5);
+              opacity: 0.9;
+              filter: blur(2px);
+          }
+
+          100% {
+              opacity: 0;
+              transform: scale(6);
+              filter: blur(8px);
+          }
+      }
+
+
+    /* ------------------- Control Panel (Hidden Initially) ------------------- */
+    #controlPanel {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      width: 600px;
+      max-width: 90vw;
+      background: rgba(0, 0, 0, 0.9);
+      border: 2px solid #00f9ff;
+      box-shadow: 0 0 30px #00f9ff;
+      padding: 50px;
+      position: absolute;
+      z-index: 10;
+      animation: fadeIn 1s ease forwards;
+    }
+
+    #controlPanel h1 {
+      font-size: 2.8em;
+      margin-bottom: 50px;
+      letter-spacing: 6px;
+    }
+
+    .mode-btn {
+      width: 100%;
+      padding: 25px 0;
+      margin: 20px 0;
+      font-size: 1.8em;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 3px;
+      color: #000;
+      background: #00f9ff;
+      border: none;
+      box-shadow: 0 0 20px #00f9ff;
+      cursor: pointer;
+      transition: 0.4s;
+      position: relative;
+    }
+
+    .mode-btn:hover {
+      background: #00c3d7;
+      box-shadow: 0 0 40px #00c3d7;
+    }
+
+    .mode-btn.active {
+      animation: zoomFadeOut 1s forwards;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: scale(0.8); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    @keyframes zoomFadeOut {
+      0% { transform: scale(1); opacity: 1; }
+      100% { transform: scale(1.4); opacity: 0; }
+    }
+
+    .flash-overlay {
+      position: fixed;
+      inset: 0;
+      background: radial-gradient(circle, rgba(0,255,255,0.3), transparent 70%);
+      animation: flashZoom 1s ease-out;
+      pointer-events: none;
+      z-index: 1000;
+    }
+
+    @keyframes flashZoom {
+      0% { opacity: 0.8; transform: scale(0); }
+      100% { opacity: 0; transform: scale(20); }
+    }
+
   </style>
 </head>
 <body>
-  <div class="login-card">
-    <div class="avatar" aria-label="User">👤</div>
-    <div class="username">Welcome, Visionary User!</div>
-    <button class="login-btn" onclick="window.location='desktop.html'">Log in</button>
-    <div style="color:#8cace2;margin-top:32px;font-size:1.05em;">No password needed for demo</div>
+
+  <!-- Login UI -->
+  <div id="loginContainer">
+    <div id="title">SYSTEM LOCK</div>
+    <input type="password" id="password" placeholder="" autofocus autocomplete="off" />
+    <button id="enterBtn">ACCESS</button>
   </div>
+
+  <!-- Transition Overlay (ACCESS GRANTED/DENIED) -->
+  <div id="overlay">
+    <div id="overlayMessage"></div>
+  </div>
+
+  <!-- Control Panel UI -->
+  <div id="controlPanel">
+    <h1>CONTROL PANEL</h1>
+    <button class="mode-btn" id="normalModeBtn">Normal Mode</button>
+    <button class="mode-btn" id="secretModeBtn">Secret Mode</button>
+  </div>
+
+  <script>
+    const passwordField = document.getElementById('password');
+    const button = document.getElementById('enterBtn');
+    const container = document.getElementById('loginContainer');
+    const overlay = document.getElementById('overlay');
+    const overlayMessage = document.getElementById('overlayMessage');
+    const controlPanel = document.getElementById('controlPanel');
+    const normalBtn = document.getElementById('normalModeBtn');
+    const secretBtn = document.getElementById('secretModeBtn');
+
+    const correctPassword = '1234';
+
+    function showDenied() {
+      overlayMessage.textContent = 'ACCESS DENIED';
+      overlayMessage.className = 'denied';
+      overlay.classList.add('active');
+
+      setTimeout(() => {
+        overlay.classList.remove('active');
+        passwordField.value = '';
+        passwordField.focus();
+      }, 2500);
+    }
+
+    function showGranted() {
+      overlayMessage.textContent = 'ACCESS GRANTED';
+      overlayMessage.setAttribute('data-text', 'ACCESS GRANTED');
+      overlayMessage.className = 'granted';
+      overlay.classList.add('active');
+
+      setTimeout(() => {
+        overlay.classList.remove('active');
+        container.style.display = 'none';
+        controlPanel.style.display = 'flex';
+      }, 3100);
+    }
+
+    function validatePassword() {
+      if (passwordField.value === correctPassword) {
+        showGranted();
+        passwordField.disabled = true;
+        button.disabled = true;
+      } else {
+        showDenied();
+      }
+    }
+
+    button.addEventListener('click', validatePassword);
+    passwordField.addEventListener('keyup', e => {
+      if (e.key === 'Enter') validatePassword();
+    });
+
+    function activateMode(button, mode) {
+      button.classList.add('active');
+      const flash = document.createElement('div');
+      flash.className = 'flash-overlay';
+      document.body.appendChild(flash);
+
+      setTimeout(() => {
+        controlPanel.style.display = 'none';
+
+        if (window.chrome?.webview) {
+          window.chrome.webview.postMessage(mode);
+        } else {
+          alert(`Switched to: ${mode}`);
+        }
+      }, 1000);
+    }
+
+    normalBtn.addEventListener('click', () => activateMode(normalBtn, 'normal_mode'));
+    secretBtn.addEventListener('click', () => activateMode(secretBtn, 'secret_mode'));
+  </script>
 </body>
 </html>
