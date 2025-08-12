@@ -1,0 +1,70 @@
+Windows 7 Installation Plan for HP ZBook 17 G3
+Overview:
+This guide covers installing Windows 7 Enterprise x64 (updated ISO with USB 3.0 & NVMe drivers) on HP ZBook 17 G3, including hardware compatibility notes and post-install steps.
+
+1. Prepare Installation Media
+Download Windows 7 updated ISO with integrated USB 3.0 and NVMe drivers:
+https://archive.org/download/windows-7-updated-2024-06-12/en_windows_7_enterprise_with_sp1_x64_dvd_u_677651_24.6.12.iso
+
+Use Rufus to create a bootable USB stick:
+
+Select appropriate partition scheme (GPT/UEFI or MBR/BIOS) based on BIOS settings.
+
+Format as NTFS or FAT32 depending on BIOS requirements.
+
+2. BIOS Settings (HP ZBook 17 G3)
+Enter BIOS setup (press Esc or F10 at startup).
+
+Set Legacy Boot (CSM) Enabled for compatibility with Windows 7.
+
+Enable Legacy USB Support to ensure USB keyboard/mouse work during install.
+
+Disable Secure Boot if available.
+
+Choose boot order to prioritize USB.
+
+3. Installation Process
+Insert USB installer.
+
+Boot from USB via boot menu (usually F9).
+
+Windows 7 installer should load successfully with USB 3.0 and NVMe support.
+
+When prompted, select the drive (NVMe or SATA SSD) for installation.
+
+Complete installation (multiple restarts).
+
+4. Post-Installation
+Install official HP drivers for:
+
+Intel Chipset
+
+Nvidia Quadro M3000M
+
+Intel HD Graphics 530
+
+Network (Wi-Fi/Ethernet)
+
+Audio
+
+Card Reader
+
+Touchpad/Keyboard
+
+Run Windows Update (may require manual installation of some updates due to WSUS deprecation).
+
+5. Optional Hardware Upgrades & Tips
+Swap NVMe SSD with SATA SSD if preferred for easier driver support.
+
+Use optical drive for install if preferred (internal or external USB DVD drive).
+
+Use BIOS updates from HP support site for improved compatibility.
+
+Backup BIOS settings before changes.
+
+Troubleshooting
+If USB input is not detected during install, double-check Legacy USB Support and try different USB ports.
+
+If NVMe drive not detected, confirm correct BIOS settings and try SATA SSD as fallback.
+
+Use HP support forums or official drivers if hardware components fail.
