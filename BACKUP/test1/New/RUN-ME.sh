@@ -1,5 +1,5 @@
 #!/bin/bash
-# RUN-ME.sh — Ubuntu Minimal → Dynamic OS conversion script
+# RUN-ME.sh — Debian Minimal → Dynamic OS conversion script
 # Must be run as root
 
 set -e
@@ -20,8 +20,8 @@ fi
 
 # --- Step 1: Ensure network ---
 echo ">>> Checking network..."
-if ! ping -c1 google.com &>/dev/null; then
-  echo "No internet connection. Please connect to network before running."
+if ! ping -c1 debian.org &>/dev/null; then
+  echo "No internet connection. Please connect to a network before running."
   exit 1
 fi
 
