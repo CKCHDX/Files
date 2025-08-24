@@ -1,3 +1,2 @@
 sudo apt update
-sudo apt install -y build-essential clang gcc \
-    gnu-efi qemu-system-x86 ovmf mtools dosfstools
+sudo apt install -y build-essential gnu-efi qemu-system-x86 ovmf mtools dosfstools
