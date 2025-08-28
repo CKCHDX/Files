@@ -85,36 +85,41 @@ done
 log "Package download pass finished."
 
 # Ask target device
+# --- Choose target device ---
 echo
-read -p "Enter the target device that will receive the new system (e.g. /dev/sda) : " TARGET_DEV
-if [ -z "$TARGET_DEV" ]; then warn "No target device given. Exiting."; exit 1; fi
-if [ ! -b "$TARGET_DEV" ]; then warn "Device $TARGET_DEV not found as block device. Exiting."; exit 1; fi
+read -p "Enter the target device (install disk, e.g. /dev/sda) : " TARGET_DEV
+if [ -z "$TARGET_DEV" ] || [ ! -b "$TARGET_DEV" ]; then
+  warn "Device not valid. Exiting."
+  exit 1
+fi
 
-read -p "Target $TARGET_DEV will be wiped. Type 'YES' to continue: " CONFIRM
-if [ "$CONFIRM" != "YES" ]; then warn "Aborted by user."; exit 1; fi
+# Confirm wipe
+read -p "ALL data on $TARGET_DEV will be erased. Type YES to continue: " CONFIRM
+[ "$CONFIRM" != "YES" ] && { warn "Aborted by user."; exit 1; }
 
-# Ask UEFI or BIOS
-read -p "Is the target boot environment UEFI? (y/N) : " UEFI_ANSWER
-UEFI_ANSWER=${UEFI_ANSWER,,}
-if [ "$UEFI_ANSWER" = "y" ] || [ "$UEFI_ANSWER" = "yes" ]; then
+# Detect EFI automatically
+if [ -d /sys/firmware/efi ]; then
   UEFI=true
 else
   UEFI=false
 fi
+log "Boot mode detected: $([ "$UEFI" = true ] && echo UEFI || echo BIOS)."
 
-log "Partitioning $TARGET_DEV (will create root and ${UEFI:+EFI} partitions)."
-# Wipe partition table and create new
-parted -s "$TARGET_DEV" mklabel gpt >/dev/null 2>&1 || { warn "parted mklabel failed; trying msdos label."; parted -s "$TARGET_DEV" mklabel msdos >/dev/null 2>&1 || { warn "failed to create partition table"; exit 1; } }
+# --- Partition disk ---
+log "Creating new partition table on $TARGET_DEV..."
+umount "${TARGET_DEV}"* 2>/dev/null || true
+
+parted -s "$TARGET_DEV" mklabel gpt || { warn "Could not create GPT label on $TARGET_DEV"; exit 1; }
 
 if [ "$UEFI" = true ]; then
-  # Create EFI partition and root
+  log "Creating EFI + root partitions"
   parted -s "$TARGET_DEV" mkpart ESP fat32 1MiB 513MiB
-  parted -s "$TARGET_DEV" set 1 boot on
+  parted -s "$TARGET_DEV" set 1 esp on
   parted -s "$TARGET_DEV" mkpart primary ext4 513MiB 100%
   EFI_PART="${TARGET_DEV}1"
   ROOT_PART="${TARGET_DEV}2"
 else
-  # BIOS: single root partition (and small bios_grub if needed)
+  log "Creating single root partition"
   parted -s "$TARGET_DEV" mkpart primary ext4 1MiB 100%
   ROOT_PART="${TARGET_DEV}1"
 fi
