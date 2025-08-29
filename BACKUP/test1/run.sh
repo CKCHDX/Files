@@ -265,17 +265,22 @@ if [ -d /sys/firmware/efi ] || [ "$UEFI" = true ]; then
   # Make sure efivars is mounted inside chroot
   if [ ! -d "$CHROOT/sys/firmware/efi" ]; then
     mkdir -p "$CHROOT/sys/firmware/efi"
+    mount -t efivarfs efivarfs "$CHROOT/sys/firmware/efi/efivars" 2>/dev/null || true
+
   fi
-  chroot "$CHROOT" /bin/bash -c "grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=Oscyra || true; update-grub || true"
+  chroot "$CHROOT" /bin/bash -c "grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=Oscyra --recheck; update-grub"
 else
   chroot "$CHROOT" /bin/bash -c "export DEBIAN_FRONTEND=noninteractive; apt-get install -y grub-pc" >/dev/null 2>&1 || warn "grub-pc install failed."
-  chroot "$CHROOT" /bin/bash -c "grub-install --target=i386-pc $TARGET_DEV || true; update-grub || true"
+  chroot "$CHROOT" /bin/bash -c "grub-install --target=i386-pc --recheck $TARGET_DEV; update-grub"
 fi
 
 # Clean up apt lists to reduce image size
 chroot "$CHROOT" /bin/bash -c "apt-get clean || true; rm -rf /var/lib/apt/lists/*" >/dev/null 2>&1 || true
 
 log "Chroot configuration complete."
+# Force all writes to disk
+sync
+sleep 2
 
 # Exit chroot and unmount
 log "Cleaning up and unmounting chroot binds."
