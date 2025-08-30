@@ -1,127 +1,69 @@
 #!/bin/bash
-# RUN-ME.sh — Debian Minimal → Dynamic OS conversion script
-# Must be run as root
+# oscyra-setup.sh
+# Run as root
 
-set -e
-set -x
+# Update repositories
+xbps-install -Syu
 
-REQUIRED_FILES=("Oscyra" "oscyra-session.sh" "oscyra-installer" "oscyra-login")
-PACKAGES_LIST="oscyra.txt"
-PLYMOUTH_THEME_NAME="oscyra"
-PLYMOUTH_SRC_DIR="./plymouth"
-PLYMOUTH_DST_DIR="/usr/share/plymouth/themes/$PLYMOUTH_THEME_NAME"
-XWRAPPER_CONFIG="/etc/X11/Xwrapper.config"
+# Install system essentials
+xbps-install -y \
+  systemd bash sudo coreutils login dbus udev policykit-1 procps psmisc cron \
+  xorg xserver-xorg xserver-xorg-video-all xserver-xorg-input-all xinit x11-utils \
+  plasma-workspace plasma-desktop plasma-integration khotkeys kmenuedit kwayland kio kwin \
+  kded5 kglobalaccel kde-cli-tools libplasma libkworkspace libtaskmanager libkscreenlocker \
+  sddm \
+  qt5-devel qttools5-dev qttools5-dev-tools qt5-webengine libqt5widgets5 libqt5webenginewidgets5 \
+  libqt5dbus5 libqt5gui5 libqt5core5a libqt5network5 libqt5svg5 \
+  libkf5configcore5 libkf5widgetsaddons5 libkf5coreaddons5 libkf5guiaddons5 libkf5iconthemes5 \
+  libkf5itemviews5 libkf5service-bin libkf5dbusaddons5 \
+  networkmanager plasma-nm upower udisks2 kio-extras solid \
+  base-devel cmake make gcc g++ \
+  fonts-dejavu fonts-noto fonts-noto-color-emoji breeze breeze-gtk-theme breeze-icon-theme \
+  oxygen-icon-theme gtk-engines gtk-engines-murrine kde-config-gtk-style qt5-style-kvantum \
+  dolphin konsole spectacle kate ark okular
 
-# --- Step 0: Root check ---
-if [ "$EUID" -ne 0 ]; then
-  echo "Please run as root"
-  exit 1
-fi
+# Enable system services
+ln -s /etc/sv/dbus /var/service/
+ln -s /etc/sv/udev /var/service/
+ln -s /etc/sv/NetworkManager /var/service/
+ln -s /etc/sv/cron /var/service/
+ln -s /etc/sv/sddm /var/service/
 
-# --- Step 1: Ensure network ---
-echo ">>> Checking network..."
-if ! ping -c1 debian.org &>/dev/null; then
-  echo "No internet connection. Please connect to a network before running."
-  exit 1
-fi
+# Set SDDM as default display manager
+ln -s /etc/sv/sddm /var/service/
 
-# --- Step 2: Ensure guest user exists ---
-if ! id -u guest >/dev/null 2>&1; then
-  echo ">>> Creating guest user..."
-  adduser --disabled-password --gecos "" guest
-fi
-
-# --- Step 3: Install packages from oscyra.txt ---
-if [[ -f "$PACKAGES_LIST" ]]; then
-  echo ">>> Installing packages from $PACKAGES_LIST..."
-  while IFS= read -r pkg; do
-    [[ -z "$pkg" || "$pkg" == \#* ]] && continue
-    apt-get install -y "$pkg" || echo "Package $pkg failed, skipping..."
-  done < "$PACKAGES_LIST"
-else
-  echo ">>> No $PACKAGES_LIST found, skipping package install."
-fi
-
-# --- Step 4: Install Oscyra files ---
-echo ">>> Installing Oscyra files..."
-for file in "${REQUIRED_FILES[@]}"; do
-    if [[ ! -f "./$file" ]]; then
-        echo "Missing required file: $file"
-        exit 1
-    fi
-    install -m 755 "$file" /usr/bin/
-    chmod +x /usr/bin/"$file"
-done
-
-# --- Step 5: Create systemd service ---
-echo ">>> Creating systemd service: /etc/systemd/system/oscyra-dm.service"
-cat > /etc/systemd/system/oscyra-dm.service << 'EOF'
-[Unit]
-Description=Oscyra Custom Display Manager
-After=getty@tty1.service
-Requires=getty@tty1.service
-
-[Service]
-Type=simple
-User=guest
-Environment=DISPLAY=:0
-TTYPath=/dev/tty1
-StandardInput=tty
-StandardOutput=journal
-ExecStart=/usr/bin/oscyra-session.sh
-Restart=always
-
-[Install]
-WantedBy=graphical.target
+# Create custom Oscyra session for SDDM
+OSCYRA_DESKTOP=/usr/share/xsessions/oscyra.desktop
+cat <<EOF > $OSCYRA_DESKTOP
+[Desktop Entry]
+Name=Oscyra
+Comment=Custom Oscyra GUI
+Exec=/usr/bin/oscyra-login
+Type=Application
 EOF
 
-# --- Step 6: Enable autologin ---
-echo ">>> Setting up autologin for guest..."
-mkdir -p /etc/systemd/system/getty@tty1.service.d
-cat > /etc/systemd/system/getty@tty1.service.d/override.conf << 'EOF'
-[Service]
-ExecStart=
-ExecStart=-/sbin/agetty --autologin guest --noclear %I $TERM
-EOF
+# Make Oscyra login script executable
+cat <<'EOF' > /usr/bin/oscyra-login
+#!/bin/bash
 
-# --- Step 7: Configure Xorg permissions ---
-echo ">>> Configuring Xorg permissions..."
-cat > "$XWRAPPER_CONFIG" << 'EOF'
-allowed_users=anybody
-needs_root_rights=yes
-EOF
-
-# --- Step 8: Set Plymouth theme (optional) ---
-if command -v plymouth-set-default-theme >/dev/null; then
-  echo ">>> Installing Plymouth theme..."
-  if [ -d "$PLYMOUTH_SRC_DIR" ]; then
-    rm -rf "$PLYMOUTH_DST_DIR"
-    cp -r "$PLYMOUTH_SRC_DIR" "$PLYMOUTH_DST_DIR"
-    plymouth-set-default-theme "$PLYMOUTH_THEME_NAME"
-    update-initramfs -u -k all
-  else
-    echo ">>> No plymouth theme directory found, skipping..."
-  fi
-else
-  echo ">>> Plymouth not installed, skipping theme setup..."
+# Start Xorg (if not already running)
+if ! pgrep -x Xorg > /dev/null; then
+  Xorg :0 &
+  sleep 3
 fi
 
-# --- Step 9: Enable Oscyra service ---
-systemctl daemon-reload
-systemctl enable oscyra-dm.service
-systemctl set-default graphical.target
+# Start kwin_x11 window manager
+kwin_x11 &
 
-# --- Step 10: Ask to export system ---
-read -p "Do you want to export the current system to an ISO/IMG before reboot? (y/N): " EXPORT_CHOICE
-if [[ "$EXPORT_CHOICE" =~ ^[Yy]$ ]]; then
-    echo ">>> Installing live-build tools..."
-    apt-get install -y live-build
-    echo ">>> Building ISO image..."
-    mkdir -p /mnt/dynamicos-export
-    lb config
-    lb build
-    mv *.iso /mnt/dynamicos-export/DynamicOS-$(date +%F).iso
-    echo "ISO saved to /mnt/dynamicos-export/"
+# Start dbus if not running
+if ! pgrep -x dbus-daemon > /dev/null; then
+  eval $(dbus-launch --sh-syntax)
 fi
 
-echo ">>> Conversion complete! Reboot to start Dynamic OS."
+# Start your custom GUI
+/usr/bin/oscyra-login-app
+EOF
+
+chmod +x /usr/bin/oscyra-login
+
+echo "Setup complete. You can now select 'Oscyra' in SDDM and login to start your GUI."
