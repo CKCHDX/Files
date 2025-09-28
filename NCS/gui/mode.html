@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Network Cracker - Attack Mode</title>
+<style>
+  :root {
+    --bg-color: #010514;
+    --accent-green: #00ffcc;
+    --accent-blue: #004466;
+    --danger-red: #ff2952;
+    --text-glow: rgba(0, 255, 200, 0.7);
+    font-family: "OCR A Std", monospace, monospace;
+  }
+
+  body, html {
+    margin: 0; padding: 0; height: 100%; width: 100%;
+    background: linear-gradient(135deg, #00020c, #001d2f);
+    color: var(--accent-green);
+    overflow: hidden;
+    user-select: none;
+  }
+
+  .attack-mode {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    padding: 2em;
+    box-sizing: border-box;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    position: relative;
+    filter: drop-shadow(0 0 0.5rem var(--text-glow));
+  }
+
+  h1 {
+    font-size: 3.5rem;
+    margin: 0 0 0.5rem 0;
+    text-shadow: 0 0 20px var(--accent-green);
+  }
+
+  .status {
+    font-size: 1.6rem;
+    margin-bottom: 1rem;
+  }
+
+  .wave {
+    position: absolute;
+    border-radius: 50%;
+    border: 3px solid var(--accent-green);
+    animation: pulseWave 4s ease-in-out infinite;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+  }
+
+  .wave:nth-child(1) {
+    width: 300px; height: 300px;
+    animation-delay: 0;
+  }
+  .wave:nth-child(2) {
+    width: 400px; height: 400px;
+    animation-delay: 1.3s;
+  }
+  .wave:nth-child(3) {
+    width: 500px; height: 500px;
+    animation-delay: 2.6s;
+  }
+
+  @keyframes pulseWave {
+    0% {
+      transform: translate(-50%, -50%) scale(0.8);
+      opacity: 1;
+    }
+    90% {
+      opacity: 0;
+    }
+    100% {
+      transform: translate(-50%, -50%) scale(1.2);
+      opacity: 0;
+    }
+  }
+
+  .bars {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    margin-top: 2rem;
+  }
+
+  .bar {
+    width: 12px;
+    height: 50px;
+    background: linear-gradient(180deg, #00ffe2, #004d66);
+    box-shadow: 0 0 10px var(--accent-green);
+    animation: bounce 1.3s infinite;
+  }
+  .bar:nth-child(2) {
+    animation-delay: 0.3s;
+  }
+  .bar:nth-child(3) {
+    animation-delay: 0.6s;
+  }
+  .bar:nth-child(4) {
+    animation-delay: 0.9s;
+  }
+  .bar:nth-child(5) {
+    animation-delay: 1.2s;
+  }
+
+  @keyframes bounce {
+    0%, 100% { transform: scaleY(1); }
+    50% { transform: scaleY(1.7); }
+  }
+
+  .no-clients {
+    margin-top: 3rem;
+    font-size: 1.4rem;
+    color: var(--danger-red);
+    text-shadow: none;
+  }
+</style>
+</head>
+<body>
+    <div class="attack-mode">
+    <h1>MONITORING NETWORK</h1>
+    <p class="status" id="status-text">Waiting for handshake or connected clients...</p>
+    <div class="wave"></div>
+    <div class="wave"></div>
+    <div class="wave"></div>
+        <div class="bars">
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+    </div>
+    <p class="no-clients" id="no-clients-text" style="display:none;">
+        No connected clients found. Cannot perform deauthentication.
+    </p>
+    </div>
+  
+
+<script>
+  // This script can be extended to listen on WebChannel signals and update states accordingly
+  // For example: show no-clients text, update status-text dynamically, etc.
+</script>
+
+</body>
+</html>
